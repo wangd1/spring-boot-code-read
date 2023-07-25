@@ -90,18 +90,23 @@ class OnClassCondition extends FilteringSpringBootCondition {
 	public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		ClassLoader classLoader = context.getClassLoader();
 		ConditionMessage matchMessage = ConditionMessage.empty();
+		// 拿到ConditionalOnClass注解中的value值，也就是要判断是否存在的类名
 		List<String> onClasses = getCandidates(metadata, ConditionalOnClass.class);
 		if (onClasses != null) {
+			// 判断onClasses中不存在的类
 			List<String> missing = filter(onClasses, ClassNameFilter.MISSING, classLoader);
+			// 如果有缺失的类，那就表示不匹配
 			if (!missing.isEmpty()) {
 				return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnClass.class)
 					.didNotFind("required class", "required classes")
 					.items(Style.QUOTE, missing));
 			}
+			// 否则就匹配
 			matchMessage = matchMessage.andCondition(ConditionalOnClass.class)
 				.found("required class", "required classes")
 				.items(Style.QUOTE, filter(onClasses, ClassNameFilter.PRESENT, classLoader));
 		}
+		// 和上面类似，只不过是判断onMissingClasses是不是全部缺失，如果是则表示匹配
 		List<String> onMissingClasses = getCandidates(metadata, ConditionalOnMissingClass.class);
 		if (onMissingClasses != null) {
 			List<String> present = filter(onMissingClasses, ClassNameFilter.PRESENT, classLoader);

@@ -63,6 +63,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 class ServletWebServerFactoryConfiguration {
 
+	/**
+	 * 主要使用条件注解，注入tomcat或者jetty或者undertow的ServletWebServerFactory
+	 */
+
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ Servlet.class, Tomcat.class, UpgradeProtocol.class })
 	@ConditionalOnMissingBean(value = ServletWebServerFactory.class, search = SearchStrategy.CURRENT)
@@ -74,6 +78,7 @@ class ServletWebServerFactoryConfiguration {
 				ObjectProvider<TomcatContextCustomizer> contextCustomizers,
 				ObjectProvider<TomcatProtocolHandlerCustomizer<?>> protocolHandlerCustomizers) {
 			TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+			// orderedStream()调用时会去Spring容器中找到TomcatConnectorCustomizer类型的Bean，默认是没有的，程序员可以自己定义
 			factory.getTomcatConnectorCustomizers()
 				.addAll(connectorCustomizers.orderedStream().collect(Collectors.toList()));
 			factory.getTomcatContextCustomizers()

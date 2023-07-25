@@ -70,6 +70,7 @@ public class ServletWebServerFactoryCustomizer
 
 	@Override
 	public void customize(ConfigurableServletWebServerFactory factory) {
+		// 设置配置文件里面的东西，server开头的
 		PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
 		map.from(this.serverProperties::getPort).to(factory::setPort);
 		map.from(this.serverProperties::getAddress).to(factory::setAddress);

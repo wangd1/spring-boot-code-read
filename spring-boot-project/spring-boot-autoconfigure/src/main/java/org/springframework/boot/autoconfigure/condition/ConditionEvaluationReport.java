@@ -80,6 +80,8 @@ public final class ConditionEvaluationReport {
 		Assert.notNull(condition, "Condition must not be null");
 		Assert.notNull(outcome, "Outcome must not be null");
 		this.unconditionalClasses.remove(source);
+		// 一个类或一个方法上可能会有多个条件注解
+		// outcomes是按类名、方法名来进行分组的
 		if (!this.outcomes.containsKey(source)) {
 			this.outcomes.put(source, new ConditionAndOutcomes());
 		}

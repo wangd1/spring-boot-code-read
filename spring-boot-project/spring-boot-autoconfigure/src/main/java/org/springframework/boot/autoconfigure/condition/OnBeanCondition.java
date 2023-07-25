@@ -114,51 +114,65 @@ class OnBeanCondition extends FilteringSpringBootCondition implements Configurat
 	public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		ConditionMessage matchMessage = ConditionMessage.empty();
 		MergedAnnotations annotations = metadata.getAnnotations();
+		// 如果存在ConditionalOnBean注解
 		if (annotations.isPresent(ConditionalOnBean.class)) {
 			Spec<ConditionalOnBean> spec = new Spec<>(context, metadata, annotations, ConditionalOnBean.class);
 			MatchResult matchResult = getMatchingBeans(context, spec);
+			// 如果某个Bean不存在
 			if (!matchResult.isAllMatched()) {
 				String reason = createOnBeanNoMatchReason(matchResult);
 				return ConditionOutcome.noMatch(spec.message().because(reason));
 			}
+			// 所有Bean都存在
 			matchMessage = spec.message(matchMessage)
 				.found("bean", "beans")
 				.items(Style.QUOTE, matchResult.getNamesOfAllMatches());
 		}
+		// 如果存在ConditionalOnSingleCandidate注解
 		if (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) {
 			Spec<ConditionalOnSingleCandidate> spec = new SingleCandidateSpec(context, metadata, annotations);
 			MatchResult matchResult = getMatchingBeans(context, spec);
+			// Bean不存在
 			if (!matchResult.isAllMatched()) {
 				return ConditionOutcome.noMatch(spec.message().didNotFind("any beans").atAll());
 			}
+			// Bean存在
 			Set<String> allBeans = matchResult.getNamesOfAllMatches();
+			// 如果只有一个
 			if (allBeans.size() == 1) {
 				matchMessage = spec.message(matchMessage).found("a single bean").items(Style.QUOTE, allBeans);
 			}
 			else {
+				// 如果有多个
 				List<String> primaryBeans = getPrimaryBeans(context.getBeanFactory(), allBeans,
 						spec.getStrategy() == SearchStrategy.ALL);
+				// 没有主Bean，那就不匹配
 				if (primaryBeans.isEmpty()) {
 					return ConditionOutcome
 						.noMatch(spec.message().didNotFind("a primary bean from beans").items(Style.QUOTE, allBeans));
 				}
+				// 有多个主Bean，那就不匹配
 				if (primaryBeans.size() > 1) {
 					return ConditionOutcome
 						.noMatch(spec.message().found("multiple primary beans").items(Style.QUOTE, primaryBeans));
 				}
+				// 只有一个
 				matchMessage = spec.message(matchMessage)
 					.found("a single primary bean '" + primaryBeans.get(0) + "' from beans")
 					.items(Style.QUOTE, allBeans);
 			}
 		}
+		// 存在ConditionalOnMissingBean注解
 		if (metadata.isAnnotated(ConditionalOnMissingBean.class.getName())) {
 			Spec<ConditionalOnMissingBean> spec = new Spec<>(context, metadata, annotations,
 					ConditionalOnMissingBean.class);
 			MatchResult matchResult = getMatchingBeans(context, spec);
+			//有任意一个Bean存在，那就条件不匹配
 			if (matchResult.isAnyMatched()) {
 				String reason = createOnMissingBeanNoMatchReason(matchResult);
 				return ConditionOutcome.noMatch(spec.message().because(reason));
 			}
+			// 都不存在在，则匹配
 			matchMessage = spec.message(matchMessage).didNotFind("any beans").atAll();
 		}
 		return ConditionOutcome.match(matchMessage);

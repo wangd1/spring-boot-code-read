@@ -140,6 +140,7 @@ public class ServletWebServerFactoryAutoConfiguration {
 			if (this.beanFactory == null) {
 				return;
 			}
+			// 往Spring容器中注册一个WebServerFactoryCustomizerBeanPostProcessor
 			registerSyntheticBeanIfMissing(registry, "webServerFactoryCustomizerBeanPostProcessor",
 					WebServerFactoryCustomizerBeanPostProcessor.class,
 					WebServerFactoryCustomizerBeanPostProcessor::new);

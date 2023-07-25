@@ -56,6 +56,7 @@ import org.springframework.data.repository.Repository;
 @EnableAutoConfiguration
 @ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
 		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+// AutoConfigurationExcludeFilter的作用是扫描到的配置类名字如果在自动配置类名集合中，就不解析
 public @interface SpringBootApplication {
 
 	/**
