@@ -102,8 +102,10 @@ public class SpringApplicationJsonEnvironmentPostProcessor implements Environmen
 
 	private void processJson(ConfigurableEnvironment environment, JsonPropertyValue propertyValue) {
 		JsonParser parser = JsonParserFactory.getJsonParser();
+		// 解析json字符串为map
 		Map<String, Object> map = parser.parseMap(propertyValue.getJson());
 		if (!map.isEmpty()) {
+			// 将JsonPropertySource添加在servletContextInitParams之前
 			addJsonPropertySource(environment, new JsonPropertySource(propertyValue, flatten(map)));
 		}
 	}

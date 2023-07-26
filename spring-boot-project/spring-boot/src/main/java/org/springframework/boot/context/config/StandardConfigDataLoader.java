@@ -51,6 +51,7 @@ public class StandardConfigDataLoader implements ConfigDataLoader<StandardConfig
 				Origin.from(reference.getConfigDataLocation()));
 		String name = String.format("Config resource '%s' via location '%s'", resource,
 				reference.getConfigDataLocation());
+		// 利用PropertiesPropertySourceLoader或YamlPropertySourceLoader来加载对应文件生成PropertySource
 		List<PropertySource<?>> propertySources = reference.getPropertySourceLoader().load(name, originTrackedResource);
 		PropertySourceOptions options = (resource.getProfile() != null) ? PROFILE_SPECIFIC : NON_PROFILE_SPECIFIC;
 		return new ConfigData(propertySources, options);

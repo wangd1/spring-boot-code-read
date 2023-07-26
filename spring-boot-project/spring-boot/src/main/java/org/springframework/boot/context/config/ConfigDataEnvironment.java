@@ -141,15 +141,22 @@ class ConfigDataEnvironment {
 		UseLegacyConfigProcessingException.throwIfRequested(binder);
 		this.logFactory = logFactory;
 		this.logger = logFactory.getLog(getClass());
+		// 可以通过spring.config.on-not-found来指定某个配置文件没有找到时的动作，默认是抛异常
 		this.notFoundAction = binder.bind(ON_NOT_FOUND_PROPERTY, ConfigDataNotFoundAction.class)
 			.orElse(ConfigDataNotFoundAction.FAIL);
 		this.bootstrapContext = bootstrapContext;
 		this.environment = environment;
+		// 从spring.factories中拿到ConfigDataLocationResolver，默认会有两个：
+		// ConfigTreeConfigDataLocationResolver和StandardConfigDataLocationResolver
 		this.resolvers = createConfigDataLocationResolvers(logFactory, bootstrapContext, binder, resourceLoader);
 		this.additionalProfiles = additionalProfiles;
 		this.environmentUpdateListener = (environmentUpdateListener != null) ? environmentUpdateListener
 				: ConfigDataEnvironmentUpdateListener.NONE;
+
+		// 从spring.factories中拿到ConfigDataLoader，默认会有两个：
+		// ConfigTreeConfigDataLoader和StandardConfigDataLoader
 		this.loaders = new ConfigDataLoaders(logFactory, bootstrapContext, resourceLoader.getClassLoader());
+		// 每个Contributor要么对应一个PropertySource，要么对应一个location（配置文件路径或所在目录）
 		this.contributors = createContributors(binder);
 	}
 
@@ -163,6 +170,8 @@ class ConfigDataEnvironment {
 		MutablePropertySources propertySources = this.environment.getPropertySources();
 		List<ConfigDataEnvironmentContributor> contributors = new ArrayList<>(propertySources.size() + 10);
 		PropertySource<?> defaultPropertySource = null;
+		// 把目前Environment中的每个PropertySource都生成对应的Contributor
+		// 类型为EXISTING
 		for (PropertySource<?> propertySource : propertySources) {
 			if (DefaultPropertiesPropertySource.hasMatchingName(propertySource)) {
 				defaultPropertySource = propertySource;
@@ -173,7 +182,9 @@ class ConfigDataEnvironment {
 				contributors.add(ConfigDataEnvironmentContributor.ofExisting(propertySource));
 			}
 		}
+		// 这才是核心，根据指定路径或默认路径生成ConfigDataEnvironmentContributor，类型为INITIAL_IMPORT
 		contributors.addAll(getInitialImportContributors(binder));
+		// 把defaultProperties对应的Contributor放到最后
 		if (defaultPropertySource != null) {
 			this.logger.trace("Creating wrapped config data contributor for default property source");
 			contributors.add(ConfigDataEnvironmentContributor.ofExisting(defaultPropertySource));
@@ -192,11 +203,18 @@ class ConfigDataEnvironment {
 
 	private List<ConfigDataEnvironmentContributor> getInitialImportContributors(Binder binder) {
 		List<ConfigDataEnvironmentContributor> initialContributors = new ArrayList<>();
+		// 可以通过spring.config.import来增加路径
 		addInitialImportContributors(initialContributors, bindLocations(binder, IMPORT_PROPERTY, EMPTY_LOCATIONS));
+		// 可以通过spring.config.additional-location来添加某个配置文件所在的目录
 		addInitialImportContributors(initialContributors,
 				bindLocations(binder, ADDITIONAL_LOCATION_PROPERTY, EMPTY_LOCATIONS));
+		// 可以通过spring.config.location来指定配置文件路径，默认为
+		// optional:classpath:/;optional:classpath:/config/
+		// optional:file:./;optional:file:./config/;optional:file:./config/*/
+		// 如果指定了就不会用默认的了
 		addInitialImportContributors(initialContributors,
 				bindLocations(binder, LOCATION_PROPERTY, DEFAULT_SEARCH_LOCATIONS));
+		// 根据获取到的每个路径生成对应的Contributor，类型为INITIAL_IMPORT
 		return initialContributors;
 	}
 
@@ -206,6 +224,7 @@ class ConfigDataEnvironment {
 
 	private void addInitialImportContributors(List<ConfigDataEnvironmentContributor> initialContributors,
 			ConfigDataLocation[] locations) {
+		// 倒序
 		for (int i = locations.length - 1; i >= 0; i--) {
 			initialContributors.add(createInitialImportContributor(locations[i]));
 		}

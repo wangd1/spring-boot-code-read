@@ -76,11 +76,13 @@ public class DefaultApplicationArguments implements ApplicationArguments {
 			super(args);
 		}
 
+		// 没有加--的参数，比如java -jar springboottest.jar 123
 		@Override
 		public List<String> getNonOptionArgs() {
 			return super.getNonOptionArgs();
 		}
 
+		// 加了--的参数，比如java -jar springboottest.jar --k1=123
 		@Override
 		public List<String> getOptionValues(String name) {
 			return super.getOptionValues(name);

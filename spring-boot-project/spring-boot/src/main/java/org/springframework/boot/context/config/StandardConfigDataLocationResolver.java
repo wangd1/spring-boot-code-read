@@ -187,6 +187,9 @@ public class StandardConfigDataLocationResolver
 	private Set<StandardConfigDataReference> getReferencesForDirectory(ConfigDataLocation configDataLocation,
 			String directory, String profile) {
 		Set<StandardConfigDataReference> references = new LinkedHashSet<>();
+		// configNames的值为配置项spring.config.name对应的value，默认为application
+		// 获取directory目录下的application.properties和application.yml文件
+		// 利用PropertySourceLoader
 		for (String name : this.configNames) {
 			Deque<StandardConfigDataReference> referencesForName = getReferencesForConfigName(name, configDataLocation,
 					directory, profile);
@@ -198,6 +201,10 @@ public class StandardConfigDataLocationResolver
 	private Deque<StandardConfigDataReference> getReferencesForConfigName(String name,
 			ConfigDataLocation configDataLocation, String directory, String profile) {
 		Deque<StandardConfigDataReference> references = new ArrayDeque<>();
+		// propertySourceLoaders为：
+		// org.springframework.boot.env.PropertiesPropertySourceLoader
+		// org.springframework.boot.env.YamlPropertySourceLoader
+		// 这是从spring.factories文件中指定的
 		for (PropertySourceLoader propertySourceLoader : this.propertySourceLoaders) {
 			for (String extension : propertySourceLoader.getFileExtensions()) {
 				StandardConfigDataReference reference = new StandardConfigDataReference(configDataLocation, directory,
